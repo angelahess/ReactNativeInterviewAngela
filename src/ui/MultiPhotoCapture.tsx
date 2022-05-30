@@ -31,6 +31,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import Text from './Text';
 import {reducePath} from '../utils/filePath';
+import { getTimeMeasureUtils } from '@reduxjs/toolkit/dist/utils';
 
 const FADE_TIME = 500;
 const SUCCESS_ANIM_TIME = 400;
@@ -61,7 +62,7 @@ interface State {
   cameraFlashState: FlashStateType;
 }
 
-const LABELS = {
+const LABELS: {[key: string] : string} = {
   permissionTitle: 'Camera Permissions',
   permissionMsg: 'We need you to give us these permissions',
   ok: 'Ok',
@@ -96,7 +97,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
     buttonPositive: t('common:button:ok'),
     buttonNegative: t('common:button:cancel'),
   };
-  _gracePeriodTimer: number | undefined;
+  _gracePeriodTimer: NodeJS.Timeout | undefined;
   _useOutlineSuccessColor = false;
 
   constructor(props: Props) {

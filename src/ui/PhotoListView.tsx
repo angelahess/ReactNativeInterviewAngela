@@ -24,12 +24,16 @@ const PhotoListView: FC = (): ReactElement => {
       <View>
         {store.getState().photos.value.map(photoItem => {
           return (
-            <View>
+            <View key={photoItem.photoFilePath} style={styles.photoItem}>
+              <Text content={photoItem.lotNumber || 'No lot number'} />
               <Image
                 source={{uri: expandPath(photoItem.photoFilePath)}}
-                style={{width: 75, height: 100}}
+                style={styles.photo}
               />
-              <Text content={photoItem.lotNumber || 'No lot number'} />
+              <Image
+                source={require('../images/delete.png')}
+                style={styles.delete}
+              />
             </View>
           );
         })}
@@ -49,6 +53,20 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 45,
   },
+  photoItem: {
+    flexDirection: 'row',
+    margin: 10,
+    alignItems: 'center',
+  },
+  photo: {
+    width: 75,
+    height: 100,
+    marginHorizontal: 10,
+  },
+  delete: {
+    width: 25,
+    height: 25,
+  }
 });
 
 export default PhotoListView;
