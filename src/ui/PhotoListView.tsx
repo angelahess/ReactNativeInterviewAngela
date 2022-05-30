@@ -1,16 +1,20 @@
 import React, {FC, ReactElement} from 'react';
-import {Image, ScrollView, StyleSheet, View} from 'react-native';
+import {Image, ScrollView, StyleSheet, TouchableOpacity, View} from 'react-native';
 import Text from './Text';
 import {Link} from 'react-router-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {store} from '../store';
+import {PhotosState, removePhoto} from '../store/photos';
 import {expandPath} from '../utils/filePath';
+import {useDispatch, useSelector} from 'react-redux';
 
 const PhotoListView: FC = (): ReactElement => {
+  const dispatch = useDispatch();
   const content = [];
   for (let i = 0; i < 50; i++) {
     content.push(<Text content={'Welcome' + i} key={i} />);
   }
+  const photos = useSelector((state: {'photos': PhotosState}) => state.photos.value);
   return (
     <ScrollView>
       <View>
@@ -22,7 +26,7 @@ const PhotoListView: FC = (): ReactElement => {
         </Link>
       </View>
       <View>
-        {store.getState().photos.value.map(photoItem => {
+        {photos.map(photoItem => {
           return (
             <View key={photoItem.photoFilePath} style={styles.photoItem}>
               <Text content={photoItem.lotNumber || 'No lot number'} />
@@ -30,10 +34,13 @@ const PhotoListView: FC = (): ReactElement => {
                 source={{uri: expandPath(photoItem.photoFilePath)}}
                 style={styles.photo}
               />
+              <TouchableOpacity 
+                onPress={() => dispatch(removePhoto(photoItem))}>
               <Image
                 source={require('../images/delete.png')}
                 style={styles.delete}
               />
+              </TouchableOpacity>
             </View>
           );
         })}
