@@ -6,12 +6,14 @@
 import {
   Animated,
   Dimensions,
+  GestureResponderEvent,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 import {
   BarCodeReadEvent,
+  Point,
   RNCamera,
   TakePictureResponse,
 } from 'react-native-camera';
@@ -60,6 +62,8 @@ interface State {
   barcodeScanSuccessful: boolean;
   previewPaused: boolean;
   cameraFlashState: FlashStateType;
+  focusPoint?: {x: number, y: number},
+  showFocusPoint: boolean;
 }
 
 const LABELS: {[key: string] : string} = {
@@ -75,6 +79,8 @@ const t = (label: string): string => {
   return LABELS[label] || label;
 };
 
+const FOCUS_CIRCLE_SIZE = 64;
+
 class MultiPhotoCapture extends React.Component<Props, State> {
   state: State = {
     cameraReady: false,
@@ -84,6 +90,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
     barcodeScanSuccessful: false,
     previewPaused: false,
     cameraFlashState: FlashStateType.on,
+    showFocusPoint: false,
   };
   _camera: any;
   _tookPictureAnim = new Animated.Value(0);
@@ -99,6 +106,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
   };
   _gracePeriodTimer: NodeJS.Timeout | undefined;
   _useOutlineSuccessColor = false;
+  _focusTimer: NodeJS.Timeout | undefined;
 
   constructor(props: Props) {
     super(props);
@@ -433,6 +441,47 @@ class MultiPhotoCapture extends React.Component<Props, State> {
     );
   };
 
+  _onTap = (event: GestureResponderEvent) => {
+    const point = {x: event.nativeEvent.pageX, y: event.nativeEvent.pageY};
+      if (point.y > cameraHeight) {
+        // small hack to get around tap handler implemented on parent of camera
+        return;
+      }
+    this.setState({focusPoint: point, showFocusPoint: true});
+    if (this._focusTimer) {
+      clearTimeout(this._focusTimer);
+    }
+    this._focusTimer = setTimeout(() => {this.setState({showFocusPoint: false})}, 2000);
+  }
+
+  _getFocusCircle(): Element | null {
+    if (this.state.focusPoint && this.state.showFocusPoint) {
+      return (
+        <View 
+          style={{
+            ...styles.focusButton, 
+            top: this.state.focusPoint.y - FOCUS_CIRCLE_SIZE / 2, 
+            left: this.state.focusPoint.x - FOCUS_CIRCLE_SIZE / 2,
+          }} 
+        />
+      );
+    }
+    return null;
+
+  }
+
+  _getFocusPoint(): Point<number> {
+    if (!this.state.focusPoint) {
+      return {x: 0.5, y: 0.5}; //default
+    }
+    const point = this.state.focusPoint;
+    return {
+      x: point.x / width, 
+      y: point.y / cameraHeight,
+    };
+
+  }
+
   render() {
     const captureStep = this._getCaptureStep();
     const {
@@ -444,7 +493,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
     } = captureStep;
     const {cameraReady, capturing} = this.state;
     return (
-      <View style={styles.container}>
+      <View style={styles.container} onTouchStart={this._onTap}>
         <View style={styles.camera}>
           <RNCamera
             androidCameraPermissionOptions={this._permissionVariables}
@@ -463,6 +512,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
                 ? [captureStep.barcodeType]
                 : undefined
             }
+            autoFocusPointOfInterest={this._getFocusPoint()}
           />
         </View>
         {showOutline && (
@@ -501,6 +551,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
             ]}
           />
         )}
+        {this._getFocusCircle()}
       </View>
     );
   }
@@ -509,6 +560,7 @@ class MultiPhotoCapture extends React.Component<Props, State> {
 export default MultiPhotoCapture;
 
 const width = Dimensions.get('window').width;
+const cameraHeight = (width * 4) / 3
 
 const styles = StyleSheet.create({
   container: {
@@ -519,7 +571,7 @@ const styles = StyleSheet.create({
   },
   camera: {
     width: '100%',
-    height: (width * 4) / 3,
+    height: cameraHeight,
   },
   overlayContainer: {
     justifyContent: 'center',
@@ -592,5 +644,13 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     height: 40,
     width: 40,
+  },
+  focusButton: {
+    borderColor: 'white',
+    borderRadius: FOCUS_CIRCLE_SIZE / 2,
+    borderWidth: 1,
+    height: FOCUS_CIRCLE_SIZE,
+    position: 'absolute',
+    width: FOCUS_CIRCLE_SIZE,
   },
 });
