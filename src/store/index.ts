@@ -1,4 +1,4 @@
-import {configureStore, getDefaultMiddleware} from '@reduxjs/toolkit';
+import {configureStore} from '@reduxjs/toolkit';
 import {
   persistStore, 
   persistReducer,
@@ -11,8 +11,6 @@ import {
 } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import photosReducer from './photos';
-import { curryGetDefaultMiddleware } from '@reduxjs/toolkit/dist/getDefaultMiddleware';
-
 
 const persistConfig = {
   key: 'root',

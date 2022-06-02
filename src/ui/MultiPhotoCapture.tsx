@@ -475,9 +475,12 @@ class MultiPhotoCapture extends React.Component<Props, State> {
       return {x: 0.5, y: 0.5}; //default
     }
     const point = this.state.focusPoint;
+    const x = point.x / width; 
+    const y = point.y / cameraHeight;
+    // Rotate clockwise due to default focus behavior
     return {
-      x: point.x / width, 
-      y: point.y / cameraHeight,
+      x: y,
+      y: 1 - x,
     };
 
   }
